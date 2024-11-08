@@ -53,3 +53,19 @@ class LoginSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+    
+class UserRoleSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['role', 'username']
+
+    def get_role(self, obj):
+        if obj.is_admin:
+            return 'admin'
+        elif obj.is_vendor:
+            return 'vendor'
+        elif obj.is_guest:
+            return 'guest'
+        return 'user'
