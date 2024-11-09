@@ -40,32 +40,26 @@ class LoginSerializer(serializers.Serializer):
         email = data.get("email")
         password = data.get("password")
 
-        # Authenticate user with custom backend
+        # Authenticate user
         user = authenticate(email=email, password=password)
         if user is None:
-            raise serializers.ValidationError("Invalid email or password.")
-        if not user.is_active:
-            raise serializers.ValidationError("User account is disabled.")
+            raise serializers.ValidationError("Invalid login credentials")
 
-        # Generate tokens
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
+        data['user'] = user
+        return data
     
 class UserRoleSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ['role', 'username']
+        fields = ['role']
 
     def get_role(self, obj):
         if obj.is_admin:
             return 'admin'
+        elif obj.is_guest:
+            return 'user'
         elif obj.is_vendor:
             return 'vendor'
-        elif obj.is_guest:
-            return 'guest'
-        return 'user'
+        return 'unknown'

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
+    'futsal',
 ]
 
 MIDDLEWARE = [
@@ -135,3 +137,13 @@ AUTHENTICATION_BACKENDS = [
     'users.auth_backend.EmailAuthBackend',  # Custom backend for email login
     'django.contrib.auth.backends.ModelBackend',  # Keep Django's default backend
 ]
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(weeks=1),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(weeks=2),
+}
+
+AUTH_USER_MODEL = 'users.CustomUser'

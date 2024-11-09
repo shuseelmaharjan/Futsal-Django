@@ -18,14 +18,24 @@ class LoginAPIView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            user = serializer.validated_data['user']
+            
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            return Response({
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
      
-class UserDetailAPIView(APIView):
-    authentication_classes = [JWTAuthentication]
+class UserRoleAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         user = request.user
         serializer = UserRoleSerializer(user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
