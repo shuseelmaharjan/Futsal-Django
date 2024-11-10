@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from users.serializers import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
 
 class RegisterUserAPIView(APIView):
     def post(self, request):
@@ -39,3 +40,33 @@ class UserRoleAPIView(APIView):
         user = request.user
         serializer = UserRoleSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class LogoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Print headers and body to help debug
+        print("Request Headers:", request.headers)
+        print("Request Data:", request.data)
+
+        # Extract refresh token from the Authorization header
+        refresh_token = request.headers.get('Authorization')
+
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove the "Bearer " prefix if it's present in the Authorization header
+        if refresh_token.startswith('Bearer '):
+            refresh_token = refresh_token.split(' ')[1]
+        else:
+            return Response({"detail": "Invalid token format. Ensure you send a Bearer token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Try to blacklist the refresh token
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+        
+        except TokenError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

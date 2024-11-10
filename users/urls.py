@@ -9,4 +9,6 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('user-role', UserRoleAPIView.as_view(), name='get_user_role'),
+    path('logout', LogoutAPIView.as_view(), name='logout'),
+
 ]
