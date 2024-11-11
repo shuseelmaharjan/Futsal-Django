@@ -5,6 +5,7 @@ from users.serializers import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import AccessToken, TokenError
 
 class RegisterUserAPIView(APIView):
     def post(self, request):
@@ -31,6 +32,23 @@ class LoginAPIView(APIView):
                 'message': 'Login successful'
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ValidateTokenAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        token = request.headers.get('Authorization', None)
+        
+        if token is None or not token.startswith('Bearer '):
+            return Response({'error': 'Token not provided or invalid format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        access_token = token.split()[1]
+
+        try:
+            AccessToken(access_token)
+            return Response({'message': 'Token is valid'}, status=status.HTTP_200_OK)
+        except TokenError:
+            return Response({'error': 'Token is expired or invalid'}, status=status.HTTP_401_UNAUTHORIZED)
      
 class UserRoleAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -41,6 +59,16 @@ class UserRoleAPIView(APIView):
         serializer = UserRoleSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+class GetUsernameAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'username': user.username,
+        }, status=status.HTTP_200_OK)
+    
+
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
