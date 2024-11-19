@@ -2,6 +2,8 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('register-futsal', FutsalCreateAPIView.as_view(), name='register-futsal'),
-    path('register-futsal/<int:pk>', FutsalDeleteAPIView.as_view(), name='register-futsal')
+    path('add-futsal', FutsalCreateView.as_view(), name='futsal-create'),
+    path('list-futsals', UserFutsalListView.as_view(), name='user-futsal-list'),
+    path('check-user-existence', CheckUserExistence.as_view(), name='check_user_existence'),
+    path('update-futsal/<int:futsal_id>/update', UpdateFutsalAPIView.as_view(), name='update-futsal'),
 ]
