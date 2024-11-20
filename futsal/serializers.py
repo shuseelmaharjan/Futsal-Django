@@ -42,3 +42,16 @@ class FutsalImageSerializer(serializers.ModelSerializer):
         if obj.image:
             return request.build_absolute_uri(obj.image.url)
         return None
+
+class NearestFutsalSerializer(serializers.ModelSerializer):
+    distance = serializers.FloatField()  # Custom field for distance
+
+    class Meta:
+        model = Futsal
+        fields = ['id', 'name', 'distance', 'location', 'phone', 'latitude', 'longitude']
+
+
+class FutsalListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Futsal
+        fields = '__all__'

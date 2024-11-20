@@ -82,3 +82,14 @@ class CustomUserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['name', 'email', 'username', 'phone', 'created_at']
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['is_guest', 'is_vendor']
+
+    def update(self, instance, validated_data):
+        instance.is_guest = validated_data.get('is_guest', instance.is_guest)
+        instance.is_vendor = validated_data.get('is_vendor', instance.is_vendor)
+        instance.save()
+        return instance

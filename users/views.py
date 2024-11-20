@@ -139,3 +139,17 @@ class UserDataAPIView(APIView):
         serializer = CustomUserDataSerializer(user)
         
         return Response(serializer.data, status=200)
+
+class UpdateUserRoleAPIView(APIView):
+    def put(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UpdateUserSerializer(user, data={'is_guest': False, 'is_vendor': True}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
