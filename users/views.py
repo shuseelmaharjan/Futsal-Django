@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken, TokenError
+from django.contrib.auth.models import update_last_login
 
 class RegisterUserAPIView(APIView):
     def post(self, request):
@@ -102,3 +103,29 @@ class LogoutAPIView(APIView):
             return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
         except TokenError:
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            if not user.check_password(serializer.validated_data['old_password']):
+                return Response(
+                    {"error": "Old password is incorrect."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+
+            update_last_login(None, user)
+
+            return Response(
+                {"message": "Password changed successfully."},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

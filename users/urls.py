@@ -13,4 +13,5 @@ urlpatterns = [
     path('user-id', GetUserIdAPIView.as_view(), name='get_user-id'),
     path('validate-token', ValidateTokenAPIView.as_view()),
     path('logout', LogoutAPIView.as_view(), name='logout'),
+    path('change-password', ChangePasswordView.as_view(), name='change-password'),
 ]

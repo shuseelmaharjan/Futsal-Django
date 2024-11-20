@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import CustomUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -63,3 +64,16 @@ class UserRoleSerializer(serializers.ModelSerializer):
         elif obj.is_vendor:
             return 'vendor'
         return 'unknown'
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        new_password = attrs.get('new_password')
+        confirm_password = attrs.get('confirm_password')
+        if new_password != confirm_password:
+            raise serializers.ValidationError("New passwords do not match.")
+        validate_password(new_password)
+        return attrs
