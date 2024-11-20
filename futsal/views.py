@@ -48,19 +48,25 @@ class CheckUserExistence(APIView):
                 status=404
             )
 
+
 class UpdateFutsalAPIView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    permission_classes = [IsAuthenticated]
 
     def put(self, request, futsal_id):
+        print(f"Request Data: {request.data}")
         try:
             futsal = Futsal.objects.get(id=futsal_id, user_id=request.user)
         except Futsal.DoesNotExist:
-            return Response({"detail": "Futsal not found or you do not have permission to edit this futsal."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Futsal not found or you do not have permission to edit this futsal."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        # Serialize the data with the request data
         serializer = FutsalSerializer(futsal, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+        print(f"Serializer Errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
