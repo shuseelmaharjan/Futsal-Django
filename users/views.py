@@ -18,22 +18,35 @@ class RegisterUserAPIView(APIView):
 
 class LoginAPIView(APIView):
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+        email = request.data.get('email')
+        password = request.data.get('password')
 
+        user = authenticate(email=email, password=password)
+
+        if user:
+            refresh = RefreshToken.for_user(user)
             return Response({
-                'access_token': access_token,
-                'refresh_token': refresh_token,
-                'message': 'Login successful'
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh)
             }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
     
-    
+
+class ProtectedAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "You are authenticated"}, status=status.HTTP_200_OK)
+
+class LogoutAPIView(APIView):
+    def post(self, request):
+        refresh_token = request.data.get('refresh_token')
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+        except TokenError:
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)           
     
 class ValidateTokenAPIView(APIView):
     permission_classes = [IsAuthenticated]
