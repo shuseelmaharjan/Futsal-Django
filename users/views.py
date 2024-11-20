@@ -129,3 +129,13 @@ class ChangePasswordView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserDataAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        
+        serializer = CustomUserDataSerializer(user)
+        
+        return Response(serializer.data, status=200)

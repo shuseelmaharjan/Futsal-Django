@@ -77,3 +77,8 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("New passwords do not match.")
         validate_password(new_password)
         return attrs
+
+class CustomUserDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['name', 'email', 'username', 'phone', 'created_at']
