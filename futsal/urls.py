@@ -7,4 +7,6 @@ urlpatterns = [
     path('check-user-existence', CheckUserExistence.as_view(), name='check_user_existence'),
     path('update-futsal/<int:futsal_id>', UpdateFutsalAPIView.as_view(), name='update-futsal'),
     path('futsals', FutsalListView.as_view(), name='futsal-list'),
+    path('futsal/<slug:slug>', FutsalDetailView.as_view(), name='futsal-detail'),
+    path('check-slug', CheckSlugExistence.as_view(), name='check_slug'),
 ]

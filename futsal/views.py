@@ -24,6 +24,8 @@ class UserFutsalListView(APIView):
         serializer = FutsalSerializer(futsals, many=True)
         return Response(serializer.data)
 
+
+
 class CheckUserExistence(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -63,3 +65,27 @@ class FutsalListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class FutsalDetailView(APIView):
+    def get(self, request, slug):
+        try:
+            futsal = Futsal.objects.get(slug=slug)
+        except Futsal.DoesNotExist:
+            return Response({'error': 'Futsal not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = FutsalSerializer(futsal)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CheckSlugExistence(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = SlugCheckSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.validated_data['slug']
+            # Check if the slug exists in the database
+            if Futsal.objects.filter(slug=slug).exists():
+                return Response({"exists": True}, status=status.HTTP_200_OK)
+            else:
+                return Response({"exists": False}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

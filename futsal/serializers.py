@@ -55,3 +55,6 @@ class FutsalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Futsal
         fields = '__all__'
+
+class SlugCheckSerializer(serializers.Serializer):
+    slug = serializers.CharField(max_length=255)

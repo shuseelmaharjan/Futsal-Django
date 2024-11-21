@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'users',
     'futsal',
     'role_request',
+    'reservation',
+    'payment',
 ]
 
 MIDDLEWARE = [
