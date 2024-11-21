@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from users.models import CustomUser
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated
 
@@ -89,3 +91,27 @@ class CheckSlugExistence(APIView):
             else:
                 return Response({"exists": False}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DashboardStats(APIView):
+    def get(self, request):
+        try:
+            # Get counts of different user types
+            total_admins = CustomUser.objects.filter(is_admin=True).count()
+            total_users = CustomUser.objects.filter(is_guest=True).count()
+            total_vendors = CustomUser.objects.filter(is_vendor=True).count()
+
+            # Get the count of Futsals
+            total_futsals = Futsal.objects.count()
+
+            # Response data
+            data = {
+                "total_admins": total_admins,
+                "total_users": total_users,
+                "total_vendors": total_vendors,
+                "total_futsals": total_futsals
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

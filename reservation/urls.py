@@ -9,5 +9,7 @@ urlpatterns = [
     path('cancel-booking', CancelBookingAPIView.as_view(), name="cancel-booking"),
     path('rebook-reservation', ReBookBookingAPIView.as_view(), name="rebook-booking"),
     path('bookings', UserBookingsAPIView.as_view(), name='user_bookings'),
+    path('futsal-bookings', FutsalBookingsAPIView.as_view(), name="futsal-bookings"),
     path('booking-stats', BookingStatsView.as_view(), name='booking-stats'),
+    path('futsal-owner-stat', FutsalBookingStatsAPIView.as_view(), name='futsal-owner-stat')
 ]

@@ -9,4 +9,5 @@ urlpatterns = [
     path('futsals', FutsalListView.as_view(), name='futsal-list'),
     path('futsal/<slug:slug>', FutsalDetailView.as_view(), name='futsal-detail'),
     path('check-slug', CheckSlugExistence.as_view(), name='check_slug'),
+    path('dashboard-stats', DashboardStats.as_view(), name='dashboard-stats'),
 ]

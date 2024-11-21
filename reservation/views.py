@@ -253,3 +253,87 @@ class BookingStatsView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class FutsalBookingsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Fetch the futsal associated with the logged-in user
+        try:
+            futsal = Futsal.objects.get(user_id=user)
+        except Futsal.DoesNotExist:
+            return Response({"message": "No futsal found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Fetch all bookings for the futsal
+        bookings = Booking.objects.filter(futsal=futsal)
+
+        if not bookings.exists():
+            return Response({"message": "No bookings found for this futsal."}, status=status.HTTP_404_NOT_FOUND)
+
+        booking_data = []
+        for booking in bookings:
+            # Check if a payment exists for the user associated with the booking
+            try:
+                payment = Payment.objects.get(booking=booking, user=booking.user)  # Check for the user of the booking
+                payment_status = 'Paid'
+            except Payment.DoesNotExist:
+                payment_status = 'Unpaid'
+
+            # Serialize the booking data
+            booking_info = BookingSerializer(booking).data
+            booking_info['payment_status'] = payment_status
+
+            # Include user information in the response
+            user_info = {
+                'id': booking.user.id,
+                'phone': booking.user.phone,
+                'name': booking.user.name,
+            }
+            booking_info['user'] = user_info
+
+            booking_data.append(booking_info)
+
+        return Response(booking_data, status=status.HTTP_200_OK)
+
+
+class FutsalBookingStatsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Retrieve the authenticated user
+        user = request.user
+
+        # Retrieve the Futsal associated with the user
+        futsal = Futsal.objects.filter(user_id=user).first()
+
+        if not futsal:
+            return Response({"message": "No futsal found for the authenticated user."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # Get the current date (today)
+        today = timezone.now().date()
+
+        # Total bookings for the given futsal
+        total_bookings = Booking.objects.filter(futsal=futsal).count()
+
+        # Bookings with specific statuses
+        total_confirmed = Booking.objects.filter(futsal=futsal, is_confirmed=True).count()
+        total_reserved = Booking.objects.filter(futsal=futsal, is_reserved=True).count()
+        total_status_false = Booking.objects.filter(futsal=futsal, status=False).count()
+
+        # Bookings created today
+        bookings_today = Booking.objects.filter(futsal=futsal, created_at__date=today).count()
+
+        # Prepare the response data
+        stats = {
+            "total_bookings": total_bookings,
+            "total_confirmed": total_confirmed,
+            "total_reserved": total_reserved,
+            "total_status_false": total_status_false,
+            "bookings_today": bookings_today
+        }
+
+        return Response(stats, status=status.HTTP_200_OK)

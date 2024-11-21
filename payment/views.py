@@ -1,9 +1,14 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Payment
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from reservation.models import Booking
+from payment.models import Payment
+from futsal.models import Futsal
+from users.models import CustomUser
+
 
 class PaymentCreateAPIView(APIView):
     def post(self, request, *args, **kwargs):
@@ -42,3 +47,48 @@ class UserPaymentsView(APIView):
         serializer = ListPaymentSerializer(payments, many=True)
 
         return Response(serializer.data)
+
+
+class UserFutsalPaymentsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        try:
+            futsal = Futsal.objects.get(user_id=user)
+        except Futsal.DoesNotExist:
+            return Response(
+                {"message": "No futsal found for this user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        payments = Payment.objects.filter(booking__futsal=futsal)
+
+        if not payments.exists():
+            return Response(
+                {"message": "No payments found for this futsal."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        payment_data = [
+            {
+                "payment_id": payment.id,
+                "booking_id": payment.booking.id,
+                "payment_amount": str(payment.payment_amount),
+                "payment_date": payment.created_at.isoformat(),
+                "screenshot": payment.screenshot.url if payment.screenshot else None,
+                "user_details": {
+                    "name": payment.booking.user.name,
+                    "email": payment.booking.user.email,
+                    "phone": payment.booking.user.phone
+                }
+            }
+            for payment in payments
+        ]
+        return Response(
+            {
+                "payments": payment_data
+            },
+            status=status.HTTP_200_OK
+        )
