@@ -10,4 +10,5 @@ urlpatterns = [
     path('futsal/<slug:slug>', FutsalDetailView.as_view(), name='futsal-detail'),
     path('check-slug', CheckSlugExistence.as_view(), name='check_slug'),
     path('dashboard-stats', DashboardStats.as_view(), name='dashboard-stats'),
+    path('nearest-futsals', NearestFutsalsView.as_view(), name='nearest-futsals'),
 ]

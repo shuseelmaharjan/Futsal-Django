@@ -5,6 +5,7 @@ from rest_framework import status
 from users.models import CustomUser
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated
+from math import radians, sin, cos, sqrt, atan2
 
 class FutsalCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -115,3 +116,76 @@ class DashboardStats(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # Radius of the Earth in km
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    # Difference of latitudes and longitudes
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Haversine formula
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    # Calculate the distance
+    distance = R * c  # Distance in kilometers
+    return distance
+
+class NearestFutsalsView(APIView):
+    def post(self, request):
+        # Parse JSON body
+        data = request.data
+
+        # Check if the required fields are present in the body
+        lat = data.get('latitude')
+        lon = data.get('longitude')
+        radius = data.get('radius', 10)  # Default radius is 10 km if not provided
+
+        if lat is None or lon is None:
+            return Response({"error": "Latitude and Longitude are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Convert lat, lon, and radius to the correct types
+            lat = float(lat)
+            lon = float(lon)
+            radius = float(radius)
+
+            # Fetch all futsals
+            futsals = Futsal.objects.all()
+
+            # Filter futsals by distance
+            nearest_futsals = []
+            for futsal in futsals:
+                futsal_lat = futsal.latitude
+                futsal_lon = futsal.longitude
+                distance = haversine(lat, lon, futsal_lat, futsal_lon)
+
+                # If the distance is within the specified radius, include it
+                if distance <= radius:
+                    nearest_futsals.append((futsal, distance))
+
+            # Sort the futsals by distance
+            nearest_futsals.sort(key=lambda x: x[1])
+
+            # Format the response
+            response_data = []
+            for futsal, distance in nearest_futsals[:5]:
+                response_data.append({
+                    'id': futsal.id,
+                    'name': futsal.name,
+                    'location': futsal.location,
+                    'slug':futsal.slug,
+                    'phone':futsal.phone,
+                    'distance': round(distance, 2),
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except ValueError:
+            return Response({"error": "Invalid latitude, longitude, or radius."}, status=status.HTTP_400_BAD_REQUEST)
